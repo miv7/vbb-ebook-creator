@@ -1,0 +1,1 @@
+python vbbfetcher.py "Vị tình đầu" -i 'http://vozforums.com/showpost.php?p=49850589&postcount=1' 'http://vozforums.com/showpost.php?p=49850639&postcount=2' 'http://vozforums.com/showpost.php?p=49851248&postcount=4' -a 'Huymanutd-Voz' -r '(^\s*((chap|chapter|chương|ngoại truyện chương)\s*\d+\s*:*.*$)|(^\s*Tình yêu bóng đá\s*$)|(^\s*Mẹ tôi\s*$)|(^\s*Đôi lời\s*$))'

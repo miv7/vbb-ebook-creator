@@ -1,0 +1,1 @@
+python vbbfetcher.py "Yeu nham chi ho" -I 'http://vozforums.com/showpost.php?p=49680069&postcount=1' -a 'KhoViGaiTheo' -r '(((update)*\s*((\d+)*((\/|\-)\d+)))|(\d+\/\d+\.*)|(\d+\s*\-\>\s*\d+\/\d+).*)'

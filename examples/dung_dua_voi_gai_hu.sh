@@ -1,0 +1,1 @@
+python vbbfetcher.py "Dung dua voi gai hu" -I 'http://vozforums.com/showpost.php?p=49952108&postcount=1' 'http://vozforums.com/showpost.php?p=49964394&postcount=75' 'http://vozforums.com/showpost.php?p=49978009&postcount=98' -a 'KhoaiLePho-Voz' -r '^\s*((chap|chapter|chương|ngoại truyện chương)\s*\d+)|(hồi kết)\s*$' -l 30

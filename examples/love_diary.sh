@@ -1,0 +1,1 @@
+python vbbfetcher.py "Love Diary" -i 'http://vozforums.com/showpost.php?p=50390670&postcount=1' 'http://vozforums.com/showpost.php?p=50390854&postcount=3' -a 'Z.E.N-Voz' -r '^\s*((chap|chapter|chương|ngoại truyện chương)\s*\d+\.*\d*.*)|(hồi kết)|(\[phần\s*.*].*)\s*$'

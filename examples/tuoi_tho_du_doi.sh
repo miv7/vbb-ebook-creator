@@ -1,0 +1,1 @@
+python vbbfetcher.py "Tuoi Tho Du Doi" -i 'http://vozforums.com/showpost.php?p=47558832&postcount=1' -a 'Cuongdaika8x-Voz' -r '^\s*((chap|chapter|chương|ngoại truyện chương)\s*\d+).*\s*$'
