@@ -1,0 +1,40 @@
+This script require the following python package:
+- BeautifulSoup 4 (bs4)
+- Genshi template
+
+File structure:
+.
+├── epub.py
+├── ez_epub_example.py
+├── ez_epub.py
+├── output
+│   ├── META-INF
+│   │   └── container.xml
+│   ├── mimetype
+│   └── OEBPS
+│       ├── content.opf
+│       ├── Images
+│       ├── Styles
+│       ├── Texts
+│       └── toc.ncx
+├── templates
+│   ├── container.xml
+│   ├── content.opf
+│   ├── ez-section.html
+│   ├── image.html
+│   ├── title-page.html
+│   ├── toc.html
+│   └── toc.ncx
+└── vbbfetcher.py
+
+- This package use the epub creation script from:
+http://code.google.com/p/python-epub-builder/
+This package contains: epub.py, ez_epub.py, and the templates folder.
+- The main script is vbbfetcher.py
+** Note:
+vbbfetcher.py uses regular expression to detect heading (chapter) for the ebook.
+Therefore, it can match a large paragraph. You should use the start of line and and of line in the regular expression and the length of title parameter to reduce the matched results.
+** Some examples:
+python vbbfetcher.py "Vị tình đầu" -i 'http://vozforums.com/showpost.php?p=49850589&postcount=1' 'http://vozforums.com/showpost.php?p=49850639&postcount=2' 'http://vozforums.com/showpost.php?p=49851248&postcount=4' -a 'Huymanutd-Voz' -r '(^\s*((chap|chapter|chương|ngoại truyện chương)\s*\d+\s*:*.*$)|(^\s*Tình yêu bóng đá\s*$)|(^\s*Mẹ tôi\s*$)|(^\s*Đôi lời\s*$))'
+
+python vbbfetcher.py "Ep di xem mat gai" -I 'http://vozforums.com/showpost.php?p=51368144&postcount=1' -a 'MrXau' -r '^\s*(Update\s*.*)\s*$' -l 76 # -e 'http://vozforums.com/showthread.php?t=2973218'

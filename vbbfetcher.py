@@ -5,8 +5,6 @@ forum thread fetcher
 input: a list of single page
 output: epub version of stripped html
 """
-import subprocess
-import smtplib
 import urlparse
 from urllib2 import urlopen, HTTPError
 from urllib import urlretrieve
@@ -20,14 +18,6 @@ from epub import *
 import argparse
 from time import sleep
 
-## for sending email
-import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEBase import MIMEBase
-from email.MIMEText import MIMEText
-from email.Utils import COMMASPACE, formatdate
-from email import Encoders
-import base64
 class vbbfetcher:
     """
     Vbb fetcher
@@ -38,7 +28,6 @@ class vbbfetcher:
         self.fetched_file = []
         self.fetched_css = []
         self.fetched_img = []
-        self.index_pid_lst = []
         self.html_file = []
         self.index_lst = options.get('index', [])
         self.toc_map = options.get('toc_map', {})
@@ -49,11 +38,9 @@ class vbbfetcher:
         self.exclude = []        
         self.regex = []
         self.title_length = 255
-        self.new_update = False
         tmp = options.get('regex', [])
         if tmp:
             self.regex = tmp
-
         tmp = options.get('exclude',[])
         if tmp:
             for i in tmp:
@@ -64,7 +51,6 @@ class vbbfetcher:
         tmp = options.get('title_length', 0)
         if tmp:
             self.title_length = tmp
-
         if self.index_lst:
             p = urlparse.urlsplit(self.index_lst[0])
             self.url_path = p.scheme + '://' + p.netloc
@@ -73,7 +59,6 @@ class vbbfetcher:
             p = urlparse.urlsplit(self.index_url_orig[0])
             self.url_path = p.scheme + '://' + p.netloc
             self.url_loc = p.netloc
-
         self.html_path = self.url_loc + '/' + options.get('html_path', 'Html')
         self.img_path = self.url_loc + '/' + options.get('img_path', 'Images')
         self.css_path = self.url_loc + '/' + options.get('css_path', 'Styles')
@@ -84,12 +69,6 @@ class vbbfetcher:
             os.makedirs(self.img_path)
         if not os.path.exists(self.css_path):
             os.makedirs(self.css_path)
-        ## build the url list
-        for i in self.index_url_orig:
-            pid = self.extract_thread_post_id(i)
-            if pid:
-                self.index_pid_lst.append(i)
-
 
     def extract_thread_post_id(self, url):
         ## FIXME: should check if urlsplit is successfull or not
@@ -123,7 +102,6 @@ class vbbfetcher:
             print "File downloaded: %s" % (self.html_path + '/' + pid + '.html')
             page = open(self.html_path + '/' + pid + '.html', 'r')
         else:
-            self.new_update = True
             try:
                 print "Downloading %s" % url
                 page = urlopen(url)
@@ -145,8 +123,7 @@ class vbbfetcher:
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
         soup = BeautifulSoup(page.read())
-        if pid not in self.fetched_url:
-            self.fetched_url.append(pid)
+        self.fetched_url.append(pid)
         download_list = []
 
 	for i in soup('script'):
@@ -156,18 +133,11 @@ class vbbfetcher:
 	for i in soup('link'):
 		i.extract()
         div = soup.findAll(True, attrs={'id': ['post_message_'+pid]})
+        # print len(div)
         if len(div) == 1:
             tag = soup.body
             tag.clear()
             tag.insert(0, div[0])
-            a_list = soup.findAll('a', href=True)
-            a_pid = ""
-            for a in a_list:
-                if a['href']:
-                    a_pid = self.extract_thread_post_id(a['href'])
-                    if a_pid:
-                        a['href'] = '../Texts/' + a_pid + '.html'
-
             toc = []
             cnt = 0
             text = ""
@@ -180,8 +150,11 @@ class vbbfetcher:
                         while( t2.name != 'div' and t2 != None):
                             t1=t1.parent
                             t2=t1.parent
+                        # for stp in t1.stripped_strings:
+                        #         print stp,
                     else:
                         t1 = i
+                    # print i,
                     print repr(t1)
                     if isinstance(t1,NavigableString):
                         print "I: " + repr(t1)
@@ -214,9 +187,6 @@ class vbbfetcher:
                             else:
                                 heading_id = t1['id']
                             toc.append((text,heading_id))
-                            # print text,
-                            # print heading_id,
-                            # print toc
                         else:
                             print 'N: ' + repr(t1)
                             t1.name = 'h2'
@@ -322,34 +292,6 @@ class vbbfetcher:
             url = urlparse.urljoin(self.url_path,i)
             pid = self.extract_thread_post_id(url)
             self.fetch_html(pid)
-def send_mail(send_from, send_to, subject, text, files=[]):
-    assert type(send_to)==list
-    assert type(files)==list
-    msg = MIMEMultipart()
-    msg['From'] = send_from
-    msg['To'] = COMMASPACE.join(send_to)
-    msg['Date'] = formatdate(localtime=True)
-    msg['Subject'] = subject
-
-    msg.attach( MIMEText(text) )
-    fp = open('p.txt','r')
-    pstr = fp.read()
-    password = base64.b64decode(pstr.strip()).decode('hex')
-    for f in files:
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload( open(f,"rb").read() )
-        Encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment; filename="%s"'
-                        % os.path.basename(f))
-        msg.attach(part)
-
-    smtp = smtplib.SMTP('smtp.gmail.com', 587)
-    smtp.ehlo()
-    smtp.starttls()
-    smtp.ehlo()
-    smtp.login(send_from,password)
-    smtp.sendmail(send_from, send_to, msg.as_string())
-    smtp.close()
 def create_book(args):
     url_lst = []
     url_title = {}
@@ -389,6 +331,7 @@ def create_book(args):
                 if link['href'] in url_lst: continue
                 url_lst.append(link['href'])
                 p = vbb.extract_thread_post_id(link['href'])
+                # print p
                 if p:
                     for i in link.stripped_strings:
                         url_title[p] = i
@@ -404,21 +347,14 @@ def create_book(args):
     v = vbbfetcher(url_lst, toc_map=url_title,
                    regex=args.regex,exclude=args.nofetch,
                    title_length=args.title_length)
+    # v = vbbfetcher(url_lst, toc_map=url_title)
     v.download()
     print "Creating ebook..."
+    book = EpubBook()
     if args.title :
         book_title=args.title
     else:
         book_title="Default"
-    book_path = book_title + '.epub'
-    book_converted = book_title + '.mobi'
-    if v.new_update:
-        if os.path.exists(book_converted):
-            os.remove(book_converted)
-    else:
-        print "No update found"
-        # return
-    book = EpubBook()
     book.setTitle(book_title)
     if args.author:
         book.addCreator(args.author)
@@ -430,6 +366,7 @@ def create_book(args):
         css_dest =  "Styles/" + css_url.split('/')[-1]
         book.addCss(css_path, css_dest)
     cnt = 0
+    # print v.toc_full_map
     rm_f = open(book_title+'.rm.txt','w')
     for html_url in v.fetched_url:
         filename = ""
@@ -442,11 +379,9 @@ def create_book(args):
         rm_f.write(html_path+'\n')
         dest_path = "Texts/" + filename + ".html"
         f = open(html_path, 'r')
-        print html_path,
-        print dest_path
         n1 = book.addHtml(html_path, dest_path, f.read())
         book.addSpineItem(n1)
-
+ 
         if html_url in v.toc_full_map:
             for t in v.toc_full_map[html_url]:
                 print t
@@ -462,26 +397,8 @@ def create_book(args):
     rootDir = r"output"
     book.createBook(rootDir)
     EpubBook.createArchive(rootDir, book_title + '.epub')
-    if not os.path.exists(book_converted):
-        cmd = ['ebook-convert']
-        cmd.append(book_path)
-        cmd.append(book_converted)
-        cmd.append('--output-profile')
-        cmd.append('kindle')
-        subprocess.call(cmd)
-    if os.path.exists(book_converted):
-        send_from = file('u.txt').read().strip()
-        send_to = file('t.txt').read().split()
-        flst = []
-        flst.append(book_converted)
-        subject = "[vbbfetcher] e-book"
-        text = "Have a nice reading!\n"
-        print '='*20 + " Sending email " +'='*20
-        send_mail(send_from, send_to, subject, text, flst)
-        print '='*20 + ' Sending email done ' + '='*15
-    else:
-        print '='*20 + " No book to send " + '='*20
-
+    
+    
 if __name__ == "__main__":
 
     print sys.getdefaultencoding()
